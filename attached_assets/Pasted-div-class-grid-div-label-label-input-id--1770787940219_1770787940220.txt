@@ -1,0 +1,211 @@
+div class="grid">
+      <div>
+        <label>قيمة الفاتورة للوحدة (دولار)</label>
+        <input id="invoiceUsdPerUnit" type="number" step="0.0001" value="2" />
+      </div>
+
+      <div>
+        <label>قيمة TSC للوحدة (دولار)</label>
+        <input id="tscUsdPerUnit" type="number" step="0.0001" value="2.5" />
+      </div>
+
+      <div>
+        <label>الكمية (بنفس وحدة التسعير)</label>
+        <input id="qty" type="number" step="0.0001" value="1000" />
+      </div>
+
+      <div>
+        <label>سعر الصرف (د.ع لكل 1$)</label>
+        <input id="exchangeRate" type="number" step="0.01" value="1320" />
+      </div>
+
+      <div>
+        <label>نسبة الرسم الأساسية (مثال 30% = 0.30)</label>
+        <input id="baseDutyRate" type="number" step="0.0001" value="0.30" />
+      </div>
+
+      <div>
+        <label>نسبة حماية المنتج (مثال 5% = 0.05) — إذا لا يوجد اتركها 0</label>
+        <input id="protectionRate" type="number" step="0.0001" value="0.05" />
+      </div>
+
+      <div>
+        <label>ضريبة المبيعات (افتراضي 5% = 0.05)</label>
+        <input id="salesTaxRate" type="number" step="0.0001" value="0.05" />
+      </div>
+
+      <div>
+        <label>ضريبة البلدية (افتراضي 2% = 0.02)</label>
+        <input id="municipalRate" type="number" step="0.0001" value="0.02" />
+      </div>
+
+      <div>
+        <label>رسوم المنفذ (دينار)</label>
+        <input id="portFeesIqd" type="number" step="1" value="0" />
+      </div>
+
+      <div>
+        <label>المدفوع سابقًا</label>
+        <div class="row" style="margin:0">
+          <input id="paidAmount" type="number" step="0.01" value="1000" style="flex:1" />
+          <select id="paidCurrency" style="width:140px">
+            <option value="USD" selected>دولار</option>
+            <option value="IQD">دينار</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn" onclick="run()">احسب</button>
+      <button class="btn2" onclick="fillExample()">مثال سريع</button>
+      <button class="btn2" onclick="clearAll()">تفريغ</button>
+    </div>
+
+    <div class="out" id="out" style="display:none"></div>
+
+    <div class="note">
+      ملاحظة: لازم <b>الكمية</b> تكون بنفس وحدة التسعير (طن/كغم/قطعة/كارتون). الحاسبة ما تعرف الوحدة—هي بس تضرب.
+    </div>
+  </div>
+
+<script>
+  const r2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  function iraqCustomsCalculator(x){
+    const ex = x.exchangeRate ?? 1320;
+    const protection = x.protectionRate ?? 0;
+    const salesTaxRate = x.salesTaxRate ?? 0.05;
+    const municipalRate = x.municipalRate ?? 0.02;
+    const portFeesIqd = x.portFeesIqd ?? 0;
+
+    const paidAmount = x.paidAmount ?? 0;
+    const paidCurrency = x.paidCurrency ?? "USD";
+
+    // 1) تحويل السعر للوحدة إلى دينار
+    const invoiceIqdPerUnit = x.invoiceUsdPerUnit * ex;
+    const tscIqdPerUnit = x.tscUsdPerUnit * ex;
+
+    // 1) قيمة الوحدة المعتمدة
+    const adoptedUnitIqd = Math.max(invoiceIqdPerUnit, tscIqdPerUnit);
+
+    // 1) القيمة الكمركية
+    const customsValueIqd = adoptedUnitIqd * x.qty;
+
+    // 2) الرسم الكمركي
+    const dutyRate = x.baseDutyRate + protection;
+    const dutyIqd = customsValueIqd * dutyRate;
+
+    // 3) ضريبة المبيعات
+    const salesTaxIqd = customsValueIqd * salesTaxRate;
+
+    // 4) ضريبة البلدية
+    const municipalIqd = (customsValueIqd + dutyIqd) * municipalRate;
+
+    // 5) المجموع
+    const totalIqd = dutyIqd + salesTaxIqd + municipalIqd + portFeesIqd;
+
+    // 6) المدفوع بالدينار
+    const paidIqd = (paidCurrency === "USD") ? (paidAmount * ex) : paidAmount;
+
+    // 7) الفرق
+    const differenceIqd = totalIqd - paidIqd;
+
+    return {
+      invoiceIqdPerUnit: r2(invoiceIqdPerUnit),
+      tscIqdPerUnit: r2(tscIqdPerUnit),
+      adoptedUnitIqd: r2(adoptedUnitIqd),
+      customsValueIqd: r2(customsValueIqd),
+      dutyRate: r2(dutyRate),
+      dutyIqd: r2(dutyIqd),
+      salesTaxIqd: r2(salesTaxIqd),
+      municipalIqd: r2(municipalIqd),
+      portFeesIqd: r2(portFeesIqd),
+      totalIqd: r2(totalIqd),
+      paidIqd: r2(paidIqd),
+      differenceIqd: r2(differenceIqd),
+    };
+  }
+
+  function val(id){
+    const el = document.getElementById(id);
+    const v = el.value;
+    return (v === "" || v === null) ? 0 : Number(v);
+  }
+  function sval(id){
+    return document.getElementById(id).value;
+  }
+
+  function run(){
+    const input = {
+      invoiceUsdPerUnit: val("invoiceUsdPerUnit"),
+      tscUsdPerUnit: val("tscUsdPerUnit"),
+      qty: val("qty"),
+      exchangeRate: val("exchangeRate"),
+      baseDutyRate: val("baseDutyRate"),
+      protectionRate: val("protectionRate"),
+      salesTaxRate: val("salesTaxRate"),
+      municipalRate: val("municipalRate"),
+      portFeesIqd: val("portFeesIqd"),
+      paidAmount: val("paidAmount"),
+      paidCurrency: sval("paidCurrency"),
+    };
+
+    const res = iraqCustomsCalculator(input);
+
+    const diffClass = res.differenceIqd > 0 ? "warn" : "ok";
+    const diffText = res.differenceIqd > 0
+      ? "مطلوب دفع"
+      : (res.differenceIqd < 0 ? "دافع زيادة (حسابيًا)" : "متساوي");
+
+    const out = document.getElementById("out");
+    out.style.display = "block";
+    out.innerHTML = `
+      <table>
+        <tr><td>قيمة الفاتورة للوحدة (دينار)</td><td>${res.invoiceIqdPerUnit.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td>قيمة TSC للوحدة (دينار)</td><td>${res.tscIqdPerUnit.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td><b>قيمة الوحدة المعتمدة (أعلى قيمة)</b></td><td><b>${res.adoptedUnitIqd.toLocaleString("ar-IQ")}</b></td></tr>
+
+        <tr><td>القيمة الكمركية (دينار)</td><td>${res.customsValueIqd.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td>نسبة الرسم (الأساسي + الحماية)</td><td>${(res.dutyRate*100).toFixed(2)}%</td></tr>
+        <tr><td>الرسم الكمركي (دينار)</td><td>${res.dutyIqd.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td>ضريبة المبيعات (دينار)</td><td>${res.salesTaxIqd.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td>ضريبة البلدية (دينار)</td><td>${res.municipalIqd.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td>رسوم المنفذ (دينار)</td><td>${res.portFeesIqd.toLocaleString("ar-IQ")}</td></tr>
+
+        <tr><td><b>المجموع الكلي (دينار)</b></td><td><b>${res.totalIqd.toLocaleString("ar-IQ")}</b></td></tr>
+        <tr><td>المدفوع سابقًا (دينار)</td><td>${res.paidIqd.toLocaleString("ar-IQ")}</td></tr>
+        <tr><td><b>الفرق</b></td><td class="${diffClass}"><b>${res.differenceIqd.toLocaleString("ar-IQ")} — ${diffText}</b></td></tr>
+      </table>
+    `;
+  }
+
+  function fillExample(){
+    document.getElementById("invoiceUsdPerUnit").value = "2";
+    document.getElementById("tscUsdPerUnit").value = "2.5";
+    document.getElementById("qty").value = "1000";
+    document.getElementById("exchangeRate").value = "1320";
+    document.getElementById("baseDutyRate").value = "0.30";
+    document.getElementById("protectionRate").value = "0.05";
+    document.getElementById("salesTaxRate").value = "0.05";
+    document.getElementById("municipalRate").value = "0.02";
+    document.getElementById("portFeesIqd").value = "250000";
+    document.getElementById("paidAmount").value = "1000";
+    document.getElementById("paidCurrency").value = "USD";
+    run();
+  }
+
+  function clearAll(){
+    const ids = [
+      "invoiceUsdPerUnit","tscUsdPerUnit","qty","exchangeRate",
+      "baseDutyRate","protectionRate","salesTaxRate","municipalRate",
+      "portFeesIqd","paidAmount"
+    ];
+    ids.forEach(id => document.getElementById(id).value = "");
+    document.getElementById("paidCurrency").value = "USD";
+    document.getElementById("out").style.display = "none";
+    document.getElementById("out").innerHTML = "";
+  }
+</script>
+</body>
+</html>

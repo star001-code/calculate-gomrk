@@ -1,0 +1,78 @@
+
+<body>
+
+<div class="box">
+  <h2>حاسبة فرق الرسم الكمركي</h2>
+
+  <label>ابحث عن المنتج (اسم أو HS Code):</label>
+  <input type="text" id="searchInput" placeholder="مثال: 7020000 أو طماطة">
+
+  <label>اسم المنتج:</label>
+  <input type="text" id="productName" readonly>
+
+  <label>HS Code:</label>
+  <input type="text" id="hsCode" readonly>
+
+  <label>GDS_YER (لكل طن):</label>
+  <input type="text" id="gdsYer" readonly>
+
+  <label>الوزن (بالطن):</label>
+  <input type="number" id="weight" step="0.01">
+
+  <label>الرسم المدفوع في إبراهيم خليل ($):</label>
+  <input type="number" id="paidValue" step="0.01">
+
+  <button onclick="calculate()">احسب فرق الرسم</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+// بيانات منتجات تجريبية (ممكن توسعها بقاعدة بياناتك JSON)
+const products = [
+  {name:"طماطة", hs:"7020000", gdsYer:225},
+  {name:"بطاطا", hs:"7019000", gdsYer:225},
+  {name:"بصل", hs:"7031000", gdsYer:0.225},
+  {name:"عجول للذبح", hs:"1022910", gdsYer:3},
+];
+
+function searchProduct() {
+  let input = document.getElementById("searchInput").value.trim();
+  let product = products.find(p => p.hs === input || p.name.includes(input));
+  if (product) {
+    document.getElementById("productName").value = product.name;
+    document.getElementById("hsCode").value = product.hs;
+    document.getElementById("gdsYer").value = product.gdsYer;
+  } else {
+    document.getElementById("productName").value = "";
+    document.getElementById("hsCode").value = "";
+    document.getElementById("gdsYer").value = "";
+  }
+}
+document.getElementById("searchInput").addEventListener("input", searchProduct);
+
+function calculate() {
+  let gdsYer = parseFloat(document.getElementById("gdsYer").value);
+  let weight = parseFloat(document.getElementById("weight").value);
+  let paid = parseFloat(document.getElementById("paidValue").value);
+
+  if (isNaN(gdsYer) || isNaN(weight) || isNaN(paid)) {
+    document.getElementById("result").innerText = "⚠️ يرجى إدخال كل البيانات بشكل صحيح.";
+    return;
+  }
+
+  const rate = 6.5; // نسبة الكمارك %
+  const usdToIq = 1320; // سعر الصرف
+
+  // الحساب: فرق الرسم
+  let required = weight * gdsYer * rate;
+  let diff = (required - paid) * usdToIq;
+  if (diff < 0) diff = 0; // لا يسمح بالسالب
+
+  document.getElementById("result").innerText =
+    "💰 فرق الرسم المستحق = " + diff.toLocaleString() + " دينار عراقي";
+}
+</script>
+
+</body>
+</html>

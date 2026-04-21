@@ -1,0 +1,20 @@
+services:
+  api:
+    build: ./backend
+    environment:
+      - DB_PATH=/app/customs.db
+    volumes:
+      - ./data:/app/data
+      - ./backend/customs.db:/app/customs.db
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python seed_db.py --db /app/customs.db --schema schema.sql --tsc /app/data/TSC_2025-10-13.json
+      && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"

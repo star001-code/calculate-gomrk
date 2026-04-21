@@ -1,0 +1,119 @@
+/**
+ * كود واحد جاهز (TypeScript/JavaScript) لحاسبة الرسوم الكمركية – العراق
+ * حسب المعادلات اللي كتبتها:
+ * 1) قيمة الوحدة المعتمدة = MAX(فاتورة بالدينار, TSC بالدينار)
+ * 2) القيمة الكمركية = قيمة الوحدة المعتمدة × الكمية
+ * 3) الرسم = القيمة الكمركية × (نسبة الرسم الأساسية + نسبة حماية المنتج)
+ * 4) ضريبة المبيعات = القيمة الكمركية × 5%
+ * 5) ضريبة البلدية = (القيمة الكمركية + الرسم) × 2%
+ * 6) المجموع = الرسم + ضريبة المبيعات + ضريبة البلدية + رسوم المنفذ
+ * 7) الفرق = المجموع - (المدفوع سابقاً بالدولار × سعر الصرف)
+ *
+ * ملاحظة:
+ * - إذا المدفوع سابقاً بالدينار، خلّي paidCurrency="IQD" وادخل paidAmount بالدينار.
+ */
+
+type PaidCurrency = "USD" | "IQD";
+
+type Input = {
+  invoiceUsdPerUnit: number;   // قيمة الفاتورة للوحدة بالدولار
+  tscUsdPerUnit: number;       // قيمة TSC للوحدة بالدولار
+  qty: number;                 // الكمية (بنفس وحدة التسعير)
+  baseDutyRate: number;        // نسبة الرسم الأساسية (مثلاً 0.30)
+  protectionRate?: number;     // نسبة حماية المنتج (مثلاً 0.05) افتراضي 0
+  exchangeRate?: number;       // سعر الصرف (افتراضي 1320)
+  salesTaxRate?: number;       // ضريبة المبيعات (افتراضي 0.05)
+  municipalRate?: number;      // ضريبة البلدية (افتراضي 0.02)
+  portFeesIqd?: number;        // رسوم المنفذ بالدينار (افتراضي 0)
+  paidAmount?: number;         // المدفوع سابقاً (USD أو IQD حسب paidCurrency)
+  paidCurrency?: PaidCurrency; // "USD" افتراضي
+};
+
+type Output = {
+  invoiceIqdPerUnit: number;
+  tscIqdPerUnit: number;
+  adoptedUnitIqd: number;
+  customsValueIqd: number;
+  dutyRate: number;
+  dutyIqd: number;
+  salesTaxIqd: number;
+  municipalIqd: number;
+  portFeesIqd: number;
+  totalIqd: number;
+  paidIqd: number;
+  differenceIqd: number; // (+) مطلوب، (-) دافع زيادة
+};
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+export function iraqCustomsCalculator(x: Input): Output {
+  // Defaults
+  const ex = x.exchangeRate ?? 1320;
+  const protection = x.protectionRate ?? 0;
+  const salesTaxRate = x.salesTaxRate ?? 0.05;
+  const municipalRate = x.municipalRate ?? 0.02;
+  const portFeesIqd = x.portFeesIqd ?? 0;
+
+  const paidAmount = x.paidAmount ?? 0;
+  const paidCurrency: PaidCurrency = x.paidCurrency ?? "USD";
+
+  // 1) تحويل السعر للوحدة إلى دينار
+  const invoiceIqdPerUnit = x.invoiceUsdPerUnit * ex;
+  const tscIqdPerUnit = x.tscUsdPerUnit * ex;
+
+  // 1) قيمة الوحدة المعتمدة
+  const adoptedUnitIqd = Math.max(invoiceIqdPerUnit, tscIqdPerUnit);
+
+  // 1) القيمة الكمركية
+  const customsValueIqd = adoptedUnitIqd * x.qty;
+
+  // 2) الرسم الكمركي
+  const dutyRate = x.baseDutyRate + protection;
+  const dutyIqd = customsValueIqd * dutyRate;
+
+  // 3) ضريبة المبيعات
+  const salesTaxIqd = customsValueIqd * salesTaxRate;
+
+  // 4) ضريبة البلدية
+  const municipalIqd = (customsValueIqd + dutyIqd) * municipalRate;
+
+  // 5) المجموع الكلي
+  const totalIqd = dutyIqd + salesTaxIqd + municipalIqd + portFeesIqd;
+
+  // 6) المدفوع بالدينار
+  const paidIqd = paidCurrency === "USD" ? (paidAmount * ex) : paidAmount;
+
+  // 7) الفرق
+  const differenceIqd = totalIqd - paidIqd;
+
+  return {
+    invoiceIqdPerUnit: r2(invoiceIqdPerUnit),
+    tscIqdPerUnit: r2(tscIqdPerUnit),
+    adoptedUnitIqd: r2(adoptedUnitIqd),
+    customsValueIqd: r2(customsValueIqd),
+    dutyRate: r2(dutyRate),
+    dutyIqd: r2(dutyIqd),
+    salesTaxIqd: r2(salesTaxIqd),
+    municipalIqd: r2(municipalIqd),
+    portFeesIqd: r2(portFeesIqd),
+    totalIqd: r2(totalIqd),
+    paidIqd: r2(paidIqd),
+    differenceIqd: r2(differenceIqd),
+  };
+}
+
+/* ===== مثال تشغيل سريع =====
+const res = iraqCustomsCalculator({
+  invoiceUsdPerUnit: 2.0,
+  tscUsdPerUnit: 2.5,
+  qty: 1000,
+  baseDutyRate: 0.30,      // 30%
+  protectionRate: 0.05,    // 5%
+  portFeesIqd: 250000,
+  paidAmount: 1000,
+  paidCurrency: "USD",
+  exchangeRate: 1320,
+});
+
+console.log(res);
+*/

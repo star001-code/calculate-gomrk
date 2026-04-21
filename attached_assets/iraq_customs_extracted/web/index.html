@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>حاسبة كمركية (Database + API)</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#0b0f14">
+</head>
+<body>
+  <header class="container">
+    <h1>حاسبة كمركية داخلية</h1>
+    <p class="muted small">واجهة PWA مناسبة للآيفون. البيانات تجي من API + Database.</p>
+
+    <div class="row wrap">
+      <div class="field">
+        <label>API Base</label>
+        <input id="apiBase" type="text" value="http://localhost:8000" />
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn secondary" id="saveApi">حفظ</button>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn" id="loadStats">إحصائيات</button>
+      </div>
+    </div>
+    <div id="statsBox" class="muted small"></div>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <h2>بحث TSC</h2>
+      <div class="row">
+        <input id="q" type="search" placeholder="اكتب HS أو جزء من الوصف..." />
+        <button class="btn" id="searchBtn">بحث</button>
+      </div>
+      <div id="results" class="results"></div>
+    </section>
+
+    <section class="card">
+      <h2>إعدادات</h2>
+      <div class="row">
+        <label>السيطرة</label>
+        <select id="checkpoint"></select>
+      </div>
+      <div class="row">
+        <label>عملة الفاتورة</label>
+        <select id="currency">
+          <option value="USD" selected>USD</option>
+          <option value="IQD">IQD</option>
+          <option value="EUR">EUR</option>
+          <option value="TRY">TRY</option>
+          <option value="CNY">CNY</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>سعر الصرف إلى IQD</label>
+        <input id="fx" type="number" value="1310" min="0" step="0.01" />
+      </div>
+      <div class="row">
+        <label>أساس TSC</label>
+        <select id="basis">
+          <option value="avg" selected>avg</option>
+          <option value="min">min</option>
+          <option value="max">max</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card full">
+      <h2>إضافة صنف</h2>
+      <div class="row wrap">
+        <div class="field"><label>HS</label><input id="hs" placeholder="070200" /></div>
+        <div class="field"><label>الوحدة</label><input id="unit" placeholder="KGM" /></div>
+        <div class="field"><label>الكمية</label><input id="qty" type="number" value="1" min="0" step="0.01" /></div>
+        <div class="field"><label>قيمة الفاتورة (إجمالي)</label><input id="inv" type="number" value="0" min="0" step="0.01" /></div>
+        <div class="field"><label>نسبة الرسم</label><input id="rate" type="number" value="0.10" min="0" step="0.01" /></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" id="add">إضافة</button></div>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>HS</th><th>الوصف</th><th>كمية</th><th>وحدة</th>
+              <th>فاتورة/وحدة</th><th>TSC/وحدة</th><th>المعتمد/وحدة</th>
+              <th>قيمة كمركية IQD</th><th>الرسم IQD</th><th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="totals">
+        <div class="totalLine"><span>إجمالي الرسم</span><strong id="sumDuty">0</strong></div>
+        <div class="totalLine"><span>رسوم السيطرة</span><strong id="sumFees">0</strong></div>
+        <div class="totalLine grand"><span>المجموع النهائي</span><strong id="sumTotal">0</strong></div>
+      </div>
+
+      <div class="row">
+        <button class="btn secondary" id="calc">حساب</button>
+        <button class="btn secondary" id="export">تصدير JSON</button>
+        <button class="btn danger" id="reset">تصفير</button>
+      </div>
+
+      <pre id="out" class="codebox"></pre>
+    </section>
+  </main>
+
+<script src="app.js"></script>
+</body>
+</html>

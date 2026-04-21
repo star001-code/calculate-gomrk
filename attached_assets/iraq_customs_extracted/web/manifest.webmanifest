@@ -1,0 +1,9 @@
+{
+  "name": "حاسبة كمركية داخلية",
+  "short_name": "كمرك",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "icons": []
+}

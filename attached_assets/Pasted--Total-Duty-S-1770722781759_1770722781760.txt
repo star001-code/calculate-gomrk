@@ -1,0 +1,87 @@
+# ✅ معادلة كاملة + تطبيقها على "المشروع" (أول بيان ظاهر بالصور)
+# الفرضية/المنهج:
+# Total = Duty + SalesTax + MunicipalTax + FixedFees
+# الفرق المطلوب = Total - Paid
+#
+# ملاحظة: بأوراقك الإجمالي موجود جاهز، وكذلك (الرسم) و(الضريبة).
+# لذلك نطلع FixedFees تلقائياً من: FixedFees = Total - Duty - SalesTax - MunicipalTax
+
+from dataclasses import dataclass
+
+@dataclass
+class CustomsCase:
+    V: float                 # CIF value (قيمة الشحنة بالدولار)
+    t: float                 # basic customs rate (مثلاً 0.05)
+    p: float                 # product protection rate (مثلاً 0.65) - إذا ماكو حماية خليها 0
+    s: float                 # sales tax rate (مثلاً 0.05)
+    m: float                 # municipal tax rate (مثلاً 0.02)
+    paid: float              # المدفوع سابقاً
+    # إذا عندك أرقام فعلية من الورقة (Duty/Tax/Total) خزنها هنا حتى نحسب الرسوم الثابتة بدقة:
+    duty_doc: float | None = None
+    sales_tax_doc: float | None = None
+    municipal_doc: float | None = None
+    total_doc: float | None = None
+
+def calc_by_rates(case: CustomsCase) -> dict:
+    duty = case.V * (case.t + case.p)
+    sales_tax = case.V * case.s
+    municipal = (case.V + duty) * case.m
+    fixed_fees = 0.0
+    total = duty + sales_tax + municipal + fixed_fees
+    diff = total - case.paid
+    return {
+        "duty": duty,
+        "sales_tax": sales_tax,
+        "municipal": municipal,
+        "fixed_fees": fixed_fees,
+        "total": total,
+        "difference": diff
+    }
+
+def calc_from_document_totals(case: CustomsCase) -> dict:
+    assert case.total_doc is not None and case.duty_doc is not None and case.sales_tax_doc is not None, \
+        "لازم تدخل total_doc و duty_doc و sales_tax_doc على الأقل"
+    municipal = case.municipal_doc or 0.0
+    fixed_fees = case.total_doc - case.duty_doc - case.sales_tax_doc - municipal
+    diff = case.total_doc - case.paid
+    return {
+        "V": case.V,
+        "duty_doc": case.duty_doc,
+        "sales_tax_doc": case.sales_tax_doc,
+        "municipal_doc": municipal,
+        "fixed_fees_inferred": fixed_fees,
+        "total_doc": case.total_doc,
+        "paid": case.paid,
+        "difference_due": diff
+    }
+
+# =========================
+# 📌 تطبيق على أول بيان عندك (واضح بالصورة):
+# القيمة (V) = 8,732$
+# الرسم = 911$
+# الضريبة = 180$
+# المجموع بالورقة = 1,327$
+# المدفوع سابقاً = 1,000$
+# =========================
+
+case1 = CustomsCase(
+    V=8732,
+    t=0.05,      # مو مستخدم هنا لأننا نعتمد أرقام الورقة
+    p=0.0,
+    s=0.05,
+    m=0.0,       # إذا عندك بلدية بالورقة حطها هنا، وإلا نخليها صفر ونطلع الباقي كرسوم ثابتة
+    paid=1000,
+    duty_doc=911,
+    sales_tax_doc=180,
+    municipal_doc=0,
+    total_doc=1327
+)
+
+result1 = calc_from_document_totals(case1)
+print("=== Case 1 (From Document) ===")
+for k,v in result1.items():
+    print(f"{k}: {v}")
+
+# ✅ النتيجة المتوقعة:
+# fixed_fees_inferred = 1327 - 911 - 180 = 236$
+# difference_due = 1327 - 1000 = 327$
