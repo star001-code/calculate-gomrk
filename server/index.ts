@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
+import { registerImageRoutes } from "./replit_integrations/image";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { Pool } from "pg";
@@ -88,14 +89,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const { runSeed } = await import("./seed");
-  try {
-    await runSeed();
-  } catch (err) {
-    console.error("Seed error:", err);
+  if (process.env.DATABASE_URL) {
+    const { runSeed } = await import("./seed");
+    try {
+      await runSeed();
+    } catch (err) {
+      log("Skipping seed because the database is unavailable", "seed");
+    }
+  } else {
+    log("Skipping seed because DATABASE_URL is not configured", "seed");
   }
 
   await registerRoutes(httpServer, app);
+  registerImageRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

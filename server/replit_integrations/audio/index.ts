@@ -1,6 +1,7 @@
 export { registerAudioRoutes } from "./routes";
 export {
   openai,
+  getOpenAIClient,
   detectAudioFormat,
   convertToWav,
   ensureCompatibleFormat,

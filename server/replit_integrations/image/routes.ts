@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import { openai } from "./client";
+import { getOpenAIClient } from "./client";
 
 export function registerImageRoutes(app: Express): void {
   app.post("/api/generate-image", async (req: Request, res: Response) => {
@@ -10,6 +10,7 @@ export function registerImageRoutes(app: Express): void {
         return res.status(400).json({ error: "Prompt is required" });
       }
 
+      const openai = getOpenAIClient();
       const response = await openai.images.generate({
         model: "gpt-image-1",
         prompt,
@@ -27,6 +28,9 @@ export function registerImageRoutes(app: Express): void {
       });
     } catch (error) {
       console.error("Error generating image:", error);
+      if (error instanceof Error && error.message.includes("AI_INTEGRATIONS_OPENAI_API_KEY")) {
+        return res.status(503).json({ error: "AI service is not configured on the server" });
+      }
       res.status(500).json({ error: "Failed to generate image" });
     }
   });

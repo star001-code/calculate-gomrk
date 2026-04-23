@@ -4,7 +4,7 @@ import { storage, pool } from "./storage";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import multer from "multer";
-import { openai } from "./replit_integrations/image/client";
+import { getOpenAIClient } from "./replit_integrations/image/client";
 
 const calcItemSchema = z.object({
   hs_code: z.string(),
@@ -569,8 +569,9 @@ If a field is not visible or unclear, use reasonable defaults (empty string for 
         },
       }));
 
+      const openai = getOpenAIClient();
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
@@ -605,6 +606,9 @@ If a field is not visible or unclear, use reasonable defaults (empty string for 
       res.json(normalizeManifestResponse(parsed));
     } catch (e: any) {
       console.error("Multi-image manifest extraction error:", e?.status, e?.message, e?.error);
+      if (e instanceof Error && e.message.includes("AI_INTEGRATIONS_OPENAI_API_KEY")) {
+        return res.status(503).json({ error: "AI service is not configured on the server" });
+      }
       const msg = e?.message || e?.error?.message || "Failed to extract manifest data";
       res
         .status(500)
@@ -622,6 +626,7 @@ If a field is not visible or unclear, use reasonable defaults (empty string for 
       const base64 = file.buffer.toString("base64");
       const mimeType = file.mimetype;
 
+      const openai = getOpenAIClient();
       const response = await openai.chat.completions.create({
         model: "gpt-5.1",
         messages: [
@@ -664,6 +669,9 @@ If a field is not visible or unclear, use reasonable defaults (empty string for 
       res.json(normalizeManifestResponse(parsed));
     } catch (e: any) {
       console.error("Manifest extraction error:", e?.status, e?.message, e?.error);
+      if (e instanceof Error && e.message.includes("AI_INTEGRATIONS_OPENAI_API_KEY")) {
+        return res.status(503).json({ error: "AI service is not configured on the server" });
+      }
       const msg = e?.message || e?.error?.message || "Failed to extract manifest data";
       res
         .status(500)
