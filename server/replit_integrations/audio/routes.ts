@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import { chatStorage } from "../chat/storage";
-import { openai, speechToText, ensureCompatibleFormat } from "./client";
+import { getOpenAIClient, speechToText, ensureCompatibleFormat } from "./client";
 
 // Body parser with 50MB limit for audio payloads
 const audioBodyParser = express.json({ limit: "50mb" });
@@ -97,6 +97,7 @@ export function registerAudioRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ type: "user_transcript", data: userTranscript })}\n\n`);
 
       // 6. Stream audio response from gpt-audio
+      const openai = getOpenAIClient();
       const stream = await openai.chat.completions.create({
         model: "gpt-audio",
         modalities: ["text", "audio"],
@@ -128,6 +129,9 @@ export function registerAudioRoutes(app: Express): void {
       res.end();
     } catch (error) {
       console.error("Error processing voice message:", error);
+      if (error instanceof Error && error.message.includes("AI_INTEGRATIONS_OPENAI_API_KEY")) {
+        return res.status(503).json({ error: "AI service is not configured on the server" });
+      }
       if (res.headersSent) {
         res.write(`data: ${JSON.stringify({ type: "error", error: "Failed to process voice message" })}\n\n`);
         res.end();

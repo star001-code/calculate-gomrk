@@ -2,10 +2,17 @@ import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
 import { chatStorage } from "./storage";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("AI_INTEGRATIONS_OPENAI_API_KEY is not configured.");
+  }
+
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+}
 
 export function registerChatRoutes(app: Express): void {
   const getParam = (value: string | string[] | undefined) =>
@@ -65,6 +72,7 @@ export function registerChatRoutes(app: Express): void {
   // Send message and get AI response (streaming)
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
+      const openai = getOpenAIClient();
       const conversationId = parseInt(getParam(req.params.id) ?? "", 10);
       const { content } = req.body;
 
@@ -108,6 +116,9 @@ export function registerChatRoutes(app: Express): void {
       res.end();
     } catch (error) {
       console.error("Error sending message:", error);
+      if (error instanceof Error && error.message.includes("AI_INTEGRATIONS_OPENAI_API_KEY")) {
+        return res.status(503).json({ error: "AI service is not configured on the server" });
+      }
       // Check if headers already sent (SSE streaming started)
       if (res.headersSent) {
         res.write(`data: ${JSON.stringify({ error: "Failed to send message" })}\n\n`);
