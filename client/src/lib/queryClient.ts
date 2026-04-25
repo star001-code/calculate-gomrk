@@ -158,6 +158,37 @@ function calcDuty(body: any) {
   return { fx_rate: fxRate, items: resultItems, summary };
 }
 
+async function bodyJson(init?: RequestInit): Promise<any> {
+  try {
+    if (!init?.body) return {};
+    if (typeof init.body === "string") return JSON.parse(init.body);
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+async function validateHs(init?: RequestInit) {
+  const body = await bodyJson(init);
+  const codes: string[] = Array.isArray(body.hs_codes) ? body.hs_codes.map(normHs) : [];
+  const products = await loadProducts();
+  const results: Record<string, any> = {};
+  for (const code of codes) {
+    const match = products.find((p) => p.hs_code === code) || products.find((p) => p.hs_code.startsWith(code) || code.startsWith(p.hs_code));
+    results[code] = match
+      ? {
+          found: true,
+          description: match.description,
+          unit: match.unit,
+          min_value: match.min_value,
+          avg_value: match.avg_value,
+          max_value: match.max_value,
+        }
+      : { found: false };
+  }
+  return { results };
+}
+
 async function staticApi(url: string, init?: RequestInit): Promise<any> {
   const parsed = new URL(url, window.location.origin);
   const path = parsed.pathname;
@@ -201,14 +232,28 @@ async function staticApi(url: string, init?: RequestInit): Promise<any> {
     };
   }
 
-  if (path === "/api/calculate") {
-    let body: any = {};
-    try {
-      body = init?.body ? JSON.parse(String(init.body)) : {};
-    } catch {
-      body = {};
-    }
-    return calcDuty(body);
+  if (path === "/api/calculate") return calcDuty(await bodyJson(init));
+
+  if (path === "/api/manifest/validate-hs") return validateHs(init);
+
+  if (path === "/api/manifest/extract" || path === "/api/manifest/extract-multi") {
+    return {
+      declaration_number: "",
+      declaration_date: "",
+      checkpoint: "",
+      importer_name: "",
+      origin_country: "",
+      currency: "USD",
+      fx_rate: 1320,
+      total_packages: 0,
+      transport_method: "",
+      container_number: "",
+      paid_amount_usd: 0,
+      duty_paid_usd: 0,
+      tax_paid_usd: 0,
+      total_value_usd: 0,
+      items: [],
+    };
   }
 
   return null;
