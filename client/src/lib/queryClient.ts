@@ -25,6 +25,7 @@ type StaticProduct = {
 
 let productsCache: StaticProduct[] | null = null;
 let tariffCache: { hs_rates?: Record<string, number>; chapter_defaults?: Record<string, number> } | null = null;
+let fetchPatched = false;
 
 function toNum(value: any): number | null {
   if (value === null || value === undefined || value === "") return null;
@@ -34,6 +35,13 @@ function toNum(value: any): number | null {
 
 function normHs(value: any): string {
   return String(value || "").replace(/[^\d]/g, "").trim();
+}
+
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 async function loadTariff() {
@@ -113,7 +121,44 @@ function checkpoints() {
   ];
 }
 
-async function staticApi(url: string): Promise<any> {
+function calcDuty(body: any) {
+  const fxRate = Number(body?.fx_rate || 1320);
+  const items = Array.isArray(body?.items) ? body.items : [];
+  const resultItems = items.map((item: any) => {
+    const quantity = Number(item.quantity || 0);
+    const avgValue = Number(item.avg_value || 0);
+    const dutyRate = Number(item.duty_rate || 0);
+    const paidDuty = Number(item.paid_duty || 0);
+    const dutyUsd = quantity * avgValue * dutyRate;
+    const differenceUsd = dutyUsd - paidDuty;
+    return {
+      hs_code: String(item.hs_code || ""),
+      description: String(item.description || item.hs_code || ""),
+      quantity,
+      unit: String(item.unit || ""),
+      avg_value: avgValue,
+      duty_rate: dutyRate,
+      goods_category: String(item.goods_category || ""),
+      duty_usd: dutyUsd,
+      paid_duty_usd: paidDuty,
+      difference_usd: differenceUsd,
+      difference_iqd: differenceUsd * fxRate,
+    };
+  });
+  const summary = resultItems.reduce(
+    (acc: any, item: any) => {
+      acc.total_duty_usd += item.duty_usd;
+      acc.total_paid_usd += item.paid_duty_usd;
+      acc.total_difference_usd += item.difference_usd;
+      acc.total_difference_iqd += item.difference_iqd;
+      return acc;
+    },
+    { total_duty_usd: 0, total_paid_usd: 0, total_difference_usd: 0, total_difference_iqd: 0 },
+  );
+  return { fx_rate: fxRate, items: resultItems, summary };
+}
+
+async function staticApi(url: string, init?: RequestInit): Promise<any> {
   const parsed = new URL(url, window.location.origin);
   const path = parsed.pathname;
   const products = await loadProducts();
@@ -132,9 +177,16 @@ async function staticApi(url: string): Promise<any> {
     const q = (parsed.searchParams.get("q") || "").trim().toLowerCase();
     const limit = Number(parsed.searchParams.get("limit") || 50);
     if (!q) return [];
+    const digits = q.replace(/[^\d]/g, "");
     return products
-      .filter((p) => p.hs_code.includes(q.replace(/[^\d]/g, "")) || (p.description || "").toLowerCase().includes(q))
+      .filter((p) => (digits && p.hs_code.includes(digits)) || (p.description || "").toLowerCase().includes(q))
       .slice(0, limit);
+  }
+
+  if (path.startsWith("/api/hs/")) {
+    const hs = normHs(decodeURIComponent(path.replace("/api/hs/", "")));
+    const limit = Number(parsed.searchParams.get("limit") || 50);
+    return products.filter((p) => p.hs_code.startsWith(hs)).slice(0, limit);
   }
 
   if (path === "/api/products") {
@@ -149,8 +201,34 @@ async function staticApi(url: string): Promise<any> {
     };
   }
 
+  if (path === "/api/calculate") {
+    let body: any = {};
+    try {
+      body = init?.body ? JSON.parse(String(init.body)) : {};
+    } catch {
+      body = {};
+    }
+    return calcDuty(body);
+  }
+
   return null;
 }
+
+function patchFetchForStaticApi() {
+  if (fetchPatched || typeof window === "undefined") return;
+  fetchPatched = true;
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    const normalized = new URL(url, window.location.origin);
+    if (normalized.pathname.startsWith("/api/")) {
+      return jsonResponse(await staticApi(normalized.toString(), init));
+    }
+    return originalFetch(input, init);
+  };
+}
+
+patchFetchForStaticApi();
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -161,8 +239,11 @@ async function throwIfResNotOk(res: Response) {
 
 export async function apiRequest(method: string, url: string, data?: unknown | undefined): Promise<Response> {
   if (url.startsWith("/api/")) {
-    const result = await staticApi(url);
-    return new Response(JSON.stringify(result), { status: 200, headers: { "Content-Type": "application/json" } });
+    const result = await staticApi(url, {
+      method,
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return jsonResponse(result);
   }
 
   const res = await fetch(url, {
