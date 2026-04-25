@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -25,22 +25,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Build legacy React UI as static site
-        run: npm run build
-
-      - name: Copy static data assets
+      - name: Prepare docs static app
         run: |
+          rm -rf dist
+          mkdir -p dist
+          cp -R docs/. dist/
           if [ -d attached_assets ]; then cp -R attached_assets dist/attached_assets; fi
-          if [ -f 404.html ]; then cp 404.html dist/404.html; fi
-          echo "calculate-gomrk react static deploy - $GITHUB_SHA" > dist/version.txt
+          echo "calculate-gomrk docs static deploy - $GITHUB_SHA" > dist/version.txt
           find dist -maxdepth 2 -type f -print
 
       - name: Setup GitHub Pages
