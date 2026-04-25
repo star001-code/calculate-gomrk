@@ -27,10 +27,11 @@ jobs:
 
       - name: Prepare static site
         run: |
+          rm -rf dist
           mkdir -p dist
           cp index.html dist/index.html
           if [ -f 404.html ]; then cp 404.html dist/404.html; fi
-          ls -la dist
+          find dist -maxdepth 1 -type f -print
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
