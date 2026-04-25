@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,7 +29,7 @@ export const ThemeContext = createContext<{
   isDark: true,
 });
 
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -56,36 +56,38 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full overflow-hidden bg-background">
-              <AppSidebar className="print:hidden" />
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <SidebarProvider style={style as React.CSSProperties}>
+              <div className="flex h-screen w-full overflow-hidden bg-background">
+                <AppSidebar className="print:hidden" />
 
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 shrink-0 sticky top-0 z-50 bg-background/80 backdrop-blur-md print:hidden">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="h-4 w-px bg-border/50" />
-                  <span className="text-sm font-semibold text-primary">
-                    حاسبة فرق الرسم الكمركي
-                  </span>
-                  <div className="flex-1" />
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 shrink-0 sticky top-0 z-50 bg-background/80 backdrop-blur-md print:hidden">
+                    <SidebarTrigger data-testid="button-sidebar-toggle" />
+                    <div className="h-4 w-px bg-border/50" />
+                    <span className="text-sm font-semibold text-primary">
+                      حاسبة فرق الرسم الكمركي
+                    </span>
+                    <div className="flex-1" />
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleTheme}
-                    className="h-8 w-8 rounded-lg"
-                    data-testid="button-theme-toggle"
-                  >
-                    {isDark ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-primary" />}
-                  </Button>
-                </header>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleTheme}
+                      className="h-8 w-8 rounded-lg"
+                      data-testid="button-theme-toggle"
+                    >
+                      {isDark ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-primary" />}
+                    </Button>
+                  </header>
 
-                <main className="flex-1 overflow-auto p-0 md:p-5">
-                  <Router />
-                </main>
+                  <main className="flex-1 overflow-auto p-0 md:p-5">
+                    <AppRoutes />
+                  </main>
+                </div>
               </div>
-            </div>
-          </SidebarProvider>
+            </SidebarProvider>
+          </WouterRouter>
           <Toaster />
         </ThemeContext.Provider>
       </TooltipProvider>
