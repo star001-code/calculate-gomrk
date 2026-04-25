@@ -6,5 +6,6 @@ export default defineConfig({
   base: '/calculate-gomrk/',
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
   },
 });
