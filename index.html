@@ -3,142 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="حاسبة تقريبية لتكلفة الجمارك والرسوم" />
-  <title>حاسبة الجمارك</title>
+  <meta name="description" content="حاسبة فرق الرسم الكمركي" />
+  <title>حاسبة فرق الرسم الكمركي</title>
   <style>
-    :root {
-      font-family: Tahoma, Arial, sans-serif;
-      color: #102018;
-      background: #eef7f1;
-      font-synthesis: none;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+    :root{
+      --bg:#090b10;--card:#111722;--card2:#151d2b;--text:#f7f3e8;--muted:#9da8b8;--line:#263244;
+      --gold:#d6a84f;--gold2:#f3d27c;--green:#22c55e;--red:#ef4444;--blue:#60a5fa;
+      font-family:Tahoma,Arial,sans-serif;color:var(--text);background:var(--bg)
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-width: 320px; min-height: 100vh; }
-    button, input { font: inherit; }
-    .page-shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0; }
-    .hero { text-align: center; margin-bottom: 28px; }
-    .eyebrow { display: inline-flex; margin: 0 0 10px; padding: 7px 14px; border-radius: 999px; background: #d8f3df; color: #0f6a36; font-weight: 700; }
-    h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.1; }
-    .subtitle { max-width: 680px; margin: 16px auto 0; color: #53615a; font-size: 1.1rem; line-height: 1.8; }
-    .calculator-card { background: rgba(255,255,255,.92); border: 1px solid #dce8df; border-radius: 28px; padding: 28px; box-shadow: 0 24px 80px rgba(16,32,24,.12); }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-    label { display: grid; gap: 8px; color: #20362a; font-weight: 700; }
-    input { width: 100%; border: 1px solid #cddbd2; border-radius: 16px; padding: 14px 16px; outline: none; background: #fbfffc; color: #102018; }
-    input:focus { border-color: #15803d; box-shadow: 0 0 0 4px rgba(21,128,61,.12); }
-    .actions { display: flex; justify-content: flex-start; margin: 18px 0 0; }
-    button { border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; background: #15803d; color: white; font-weight: 800; }
-    button:hover { background: #126d34; }
-    .summary { display: grid; gap: 12px; margin-top: 24px; }
-    .summary > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px; border-radius: 18px; background: #f5faf6; }
-    .summary span { color: #53615a; }
-    .summary strong { font-size: 1.1rem; }
-    .summary .total { background: #102018; color: white; }
-    .summary .total span { color: #d6eadc; }
-    .summary .total strong { font-size: 1.35rem; }
-    .notice { margin: 18px auto 0; max-width: 760px; color: #66756d; text-align: center; line-height: 1.8; }
-    @media (max-width: 700px) {
-      .page-shell { width: min(100% - 20px, 960px); padding: 26px 0; }
-      .calculator-card { padding: 20px; border-radius: 22px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .summary > div { align-items: flex-start; flex-direction: column; }
-    }
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,rgba(214,168,79,.16),transparent 34%),var(--bg)}
+    button,input,select,textarea{font:inherit}button{cursor:pointer}
+    .app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}.sidebar{border-left:1px solid var(--line);background:rgba(12,16,24,.92);backdrop-filter:blur(12px);padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;margin-bottom:22px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,var(--gold),#8a6423);display:grid;place-items:center;font-weight:900;color:#111}.brand h1{font-size:16px;margin:0}.brand p{font-size:12px;color:var(--muted);margin:4px 0 0}.nav{display:grid;gap:8px}.nav button{border:1px solid transparent;background:transparent;color:var(--muted);padding:12px;border-radius:14px;text-align:right;display:flex;gap:10px;align-items:center}.nav button.active,.nav button:hover{background:linear-gradient(135deg,rgba(214,168,79,.18),rgba(214,168,79,.05));border-color:rgba(214,168,79,.35);color:var(--text)}
+    .main{padding:22px;overflow:auto}.topbar{height:54px;border:1px solid var(--line);border-radius:18px;background:rgba(17,23,34,.78);display:flex;align-items:center;gap:14px;padding:0 16px;margin-bottom:18px;position:sticky;top:14px;z-index:4;backdrop-filter:blur(10px)}.hamb{display:none}.grow{flex:1}.pill{font-size:12px;color:#111;background:linear-gradient(135deg,var(--gold2),var(--gold));padding:7px 12px;border-radius:999px;font-weight:800}.page{display:none;max-width:1180px;margin:0 auto}.page.active{display:block}.hero{position:relative;overflow:hidden;border:1px solid rgba(214,168,79,.25);border-radius:24px;background:linear-gradient(135deg,rgba(21,29,43,.96),rgba(12,16,24,.96));padding:28px;margin-bottom:18px}.hero:before{content:"";position:absolute;inset:-90px auto auto -90px;width:240px;height:240px;border-radius:50%;background:rgba(214,168,79,.15);filter:blur(15px)}.hero h2{margin:0;font-size:32px}.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;color:transparent}.hero p{color:var(--muted);line-height:1.8;margin:10px 0 0}.grid{display:grid;gap:14px}.cols3{grid-template-columns:repeat(3,1fr)}.cols2{grid-template-columns:repeat(2,1fr)}.card{border:1px solid var(--line);background:rgba(17,23,34,.9);border-radius:20px;padding:18px}.card:hover{border-color:rgba(214,168,79,.32)}.stat{display:flex;align-items:center;gap:14px}.ico{width:44px;height:44px;border-radius:14px;background:rgba(214,168,79,.12);display:grid;place-items:center;color:var(--gold)}.muted{color:var(--muted)}.big{font-size:26px;font-weight:900}.btn{border:0;border-radius:14px;padding:12px 16px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111;font-weight:900}.btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--line)}.field{display:grid;gap:7px}.field label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;background:#0b111b;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(214,168,79,.1)}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}th{color:var(--gold);font-weight:900;background:#0d131d;position:sticky;top:0}tr:hover td{background:rgba(214,168,79,.05)}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:18px;max-height:560px}.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:4px 8px;font-size:11px;background:rgba(214,168,79,.15);color:var(--gold)}.danger{background:rgba(239,68,68,.15);color:#fca5a5}.ok{background:rgba(34,197,94,.15);color:#86efac}.result{font-size:22px;font-weight:900;color:var(--gold2)}.notice{color:var(--muted);font-size:13px;line-height:1.8}.mobile-note{display:none}
+    @media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{position:fixed;right:0;top:0;bottom:0;width:280px;z-index:10;transform:translateX(105%);transition:.25s}.sidebar.open{transform:translateX(0)}.main{padding:12px}.hamb{display:inline-flex}.cols3,.cols2{grid-template-columns:1fr}.hero h2{font-size:24px}.topbar{top:8px}.mobile-note{display:block}}
   </style>
 </head>
 <body>
-  <main class="page-shell">
-    <section class="hero">
-      <p class="eyebrow">أداة مجانية</p>
-      <h1>حاسبة الجمارك</h1>
-      <p class="subtitle">احسب التكلفة التقريبية للمنتج بعد الشحن والجمارك والرسوم الإضافية.</p>
-    </section>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="logo">كم</div><div><h1>حاسبة فرق الرسم الكمركي</h1><p>النظام الإلكتروني</p></div></div>
+      <nav class="nav">
+        <button class="active" data-page="home">🏠 الرئيسية</button>
+        <button data-page="search">🔎 المنتجات</button>
+        <button data-page="calculator">🧮 الحاسبة</button>
+        <button data-page="manifest">🖼️ قراءة المنفست</button>
+        <button data-page="tariff">📘 التعرفة</button>
+        <button data-page="about">ℹ️ حول النظام</button>
+      </nav>
+      <p class="notice" style="margin-top:20px">نسخة static تعمل على GitHub Pages بدون Backend.</p>
+    </aside>
+    <main class="main">
+      <header class="topbar"><button class="btn secondary hamb" id="hamb">☰</button><strong>حاسبة فرق الرسم الكمركي</strong><span class="grow"></span><span class="pill" id="dataStatus">تحميل البيانات...</span></header>
 
-    <section class="calculator-card" aria-label="حاسبة الجمارك">
-      <div class="form-grid">
-        <label>سعر المنتج
-          <input id="itemPrice" inputmode="decimal" placeholder="مثال: 250000" />
-        </label>
-        <label>تكلفة الشحن
-          <input id="shippingCost" inputmode="decimal" placeholder="مثال: 30000" />
-        </label>
-        <label>نسبة الجمارك %
-          <input id="customsRate" inputmode="decimal" value="5" placeholder="مثال: 5" />
-        </label>
-        <label>رسوم إضافية
-          <input id="extraFees" inputmode="decimal" value="0" placeholder="مثال: 10000" />
-        </label>
-      </div>
+      <section id="home" class="page active">
+        <div class="hero"><h2><span class="gold">حاسبة فرق</span> الرسم الكمركي</h2><p>نظام حساب الرسوم الكمركية للمنافذ الحدودية العراقية، مع البحث في المنتجات ورموز HS والقيم الاستدلالية.</p></div>
+        <div class="grid cols3">
+          <div class="card stat"><div class="ico">📦</div><div><div class="muted">المنتجات</div><div class="big" id="statProducts">0</div></div></div>
+          <div class="card stat"><div class="ico">#</div><div><div class="muted">رموز HS</div><div class="big" id="statHs">0</div></div></div>
+          <div class="card stat"><div class="ico">📍</div><div><div class="muted">المنافذ</div><div class="big">3</div></div></div>
+        </div>
+        <div class="grid cols2" style="margin-top:14px">
+          <button class="card" onclick="go('calculator')"><h3>🧮 حاسبة الرسوم</h3><p class="muted">احسب الرسوم وفرق الرسم بالدينار والدولار</p></button>
+          <button class="card" onclick="go('search')"><h3>🔎 تصفح المنتجات</h3><p class="muted">ابحث برمز HS أو وصف المنتج</p></button>
+          <button class="card" onclick="go('manifest')"><h3>🖼️ قراءة المنفست</h3><p class="muted">واجهة static لإدخال بيانات المنفست يدويًا</p></button>
+          <button class="card" onclick="go('tariff')"><h3>📘 التعرفة</h3><p class="muted">استعلام سريع عن نسب قانون التعرفة</p></button>
+        </div>
+      </section>
 
-      <div class="actions">
-        <button type="button" id="resetBtn">تصفير</button>
-      </div>
+      <section id="search" class="page">
+        <div class="hero"><h2><span class="gold">المنتجات</span></h2><p>تصفح المنتجات أو ابحث برمز HS أو الوصف.</p></div>
+        <div class="card grid cols2"><div class="field"><label>بحث</label><input id="searchInput" placeholder="مثال: 8703 أو سيارة أو حديد" oninput="renderProducts()"></div><div class="field"><label>عدد النتائج</label><select id="limitInput" onchange="renderProducts()"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></div></div>
+        <p class="notice" id="searchMeta"></p><div class="tablewrap"><table><thead><tr><th>HS</th><th>الوصف</th><th>الحماية</th><th>الرسم</th><th>أدنى</th><th>متوسط</th><th>أقصى</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div>
+      </section>
 
-      <div class="summary">
-        <div><span>قيمة المنتج + الشحن</span><strong id="taxableAmount">0 د.ع.‏</strong></div>
-        <div><span>قيمة الجمارك</span><strong id="customsValue">0 د.ع.‏</strong></div>
-        <div><span>الرسوم الإضافية</span><strong id="feesValue">0 د.ع.‏</strong></div>
-        <div class="total"><span>الإجمالي التقريبي</span><strong id="totalValue">0 د.ع.‏</strong></div>
-      </div>
-    </section>
+      <section id="calculator" class="page">
+        <div class="hero"><h2><span class="gold">حاسبة الرسوم</span></h2><p>احسب القيمة الكمركية والرسم اعتمادًا على قيمة الفاتورة أو القيمة الاستدلالية.</p></div>
+        <div class="card grid cols3">
+          <div class="field"><label>رمز HS</label><input id="calcHs" placeholder="اختياري"></div>
+          <div class="field"><label>وصف المنتج</label><input id="calcDesc" placeholder="اختياري"></div>
+          <div class="field"><label>الكمية</label><input id="qty" type="number" value="1" oninput="calculateDuty()"></div>
+          <div class="field"><label>قيمة الفاتورة USD</label><input id="invoiceUsd" type="number" value="0" oninput="calculateDuty()"></div>
+          <div class="field"><label>القيمة الاستدلالية للوحدة IQD</label><input id="refIqd" type="number" value="0" oninput="calculateDuty()"></div>
+          <div class="field"><label>سعر الصرف</label><input id="rate" type="number" value="1320" oninput="calculateDuty()"></div>
+          <div class="field"><label>نسبة الرسم %</label><input id="dutyRate" type="number" value="20" oninput="calculateDuty()"></div>
+          <div class="field"><label>نسبة الحماية %</label><input id="protectionRate" type="number" value="0" oninput="calculateDuty()"></div>
+          <div class="field"><label>رسوم إضافية IQD</label><input id="extraIqd" type="number" value="0" oninput="calculateDuty()"></div>
+        </div>
+        <div class="grid cols3" style="margin-top:14px">
+          <div class="card"><div class="muted">القيمة بالدينار</div><div class="result" id="invoiceIqdOut">0</div></div>
+          <div class="card"><div class="muted">القيمة الكمركية</div><div class="result" id="customsValueOut">0</div></div>
+          <div class="card"><div class="muted">إجمالي الرسم</div><div class="result" id="totalDutyOut">0</div></div>
+        </div>
+      </section>
 
-    <p class="notice">ملاحظة: النتيجة تقريبية وليست تسعيرة رسمية. النسب والرسوم تختلف حسب نوع البضاعة والقوانين المحلية.</p>
-  </main>
+      <section id="manifest" class="page"><div class="hero"><h2><span class="gold">قراءة المنفست</span></h2><p>في النسخة static لا يمكن تشغيل OCR أو Backend. أدخل البيانات يدويًا ثم أرسلها للحاسبة.</p></div><div class="card grid cols2"><div class="field"><label>رمز HS</label><input id="manHs"></div><div class="field"><label>الوصف</label><input id="manDesc"></div><div class="field"><label>الكمية</label><input id="manQty" type="number" value="1"></div><div class="field"><label>قيمة الفاتورة USD</label><input id="manValue" type="number" value="0"></div><button class="btn" onclick="sendManifestToCalc()">إرسال للحاسبة</button></div></section>
 
-  <script>
-    const fields = {
-      itemPrice: document.getElementById('itemPrice'),
-      shippingCost: document.getElementById('shippingCost'),
-      customsRate: document.getElementById('customsRate'),
-      extraFees: document.getElementById('extraFees'),
-    };
+      <section id="tariff" class="page"><div class="hero"><h2><span class="gold">التعرفة</span></h2><p>استعلام عن النسبة حسب رمز HS من ملف التعرفة.</p></div><div class="card grid cols2"><div class="field"><label>رمز HS</label><input id="tariffHs" placeholder="مثال: 87032390" oninput="lookupTariff()"></div><div><div class="muted">النسبة</div><div class="result" id="tariffOut">-</div></div></div></section>
 
-    const output = {
-      taxableAmount: document.getElementById('taxableAmount'),
-      customsValue: document.getElementById('customsValue'),
-      feesValue: document.getElementById('feesValue'),
-      totalValue: document.getElementById('totalValue'),
-    };
-
-    function parseNumber(value) {
-      const number = Number(String(value || '').replace(/,/g, ''));
-      return Number.isFinite(number) ? number : 0;
-    }
-
-    function formatCurrency(value) {
-      return new Intl.NumberFormat('ar-IQ', {
-        style: 'currency',
-        currency: 'IQD',
-        maximumFractionDigits: 0,
-      }).format(Number.isFinite(value) ? value : 0);
-    }
-
-    function calculate() {
-      const price = parseNumber(fields.itemPrice.value);
-      const shipping = parseNumber(fields.shippingCost.value);
-      const rate = parseNumber(fields.customsRate.value);
-      const fees = parseNumber(fields.extraFees.value);
-      const taxableAmount = price + shipping;
-      const customs = taxableAmount * (rate / 100);
-      const total = taxableAmount + customs + fees;
-
-      output.taxableAmount.textContent = formatCurrency(taxableAmount);
-      output.customsValue.textContent = formatCurrency(customs);
-      output.feesValue.textContent = formatCurrency(fees);
-      output.totalValue.textContent = formatCurrency(total);
-    }
-
-    Object.values(fields).forEach((input) => input.addEventListener('input', calculate));
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      fields.itemPrice.value = '';
-      fields.shippingCost.value = '';
-      fields.customsRate.value = '5';
-      fields.extraFees.value = '0';
-      calculate();
-    });
-
-    calculate();
-  </script>
+      <section id="about" class="page"><div class="hero"><h2><span class="gold">حول النظام</span></h2><p>تم تحويل النظام إلى نسخة static حتى يعمل على GitHub Pages، مع الحفاظ على شكل النظام القديم والاعتماد على ملفات البيانات الموجودة داخل الكود.</p></div><div class="card"><p class="notice">الميزات التي تحتاج Backend مثل تسجيل الدخول الحقيقي، الجلسات، OCR الحقيقي، أو قاعدة بيانات حية لا تعمل على GitHub Pages. لكن البحث والحساب والتعرفة تعمل من ملفات static.</p></div></section>
+    </main>
+  </div>
+<script>
+const DATA_URL='attached_assets/ALL_PRODUCTS_WITH_DECISION_CLEAN.json';
+const TARIFF_URL='attached_assets/tariff_law22_2010.json';
+let products=[];let tariff={hs_rates:{},chapter_defaults:{}};
+const $=id=>document.getElementById(id);const fmt=n=>Number(n||0).toLocaleString('en-US');
+function norm(v){return String(v||'').replace(/[^\d]/g,'')}function num(v){const n=parseFloat(String(v||'').replace(/,/g,''));return Number.isFinite(n)?n:0}
+function mapProduct(item,i){const decision=item.decision||{};let mn=num(item.GDS_MIN),mx=num(item.GDS_MAX),av=num(item.GDS_YER);if(!av&&mn&&mx)av=(mn+mx)/2;return{ id:i+1,hs:norm(item.IDE_HSC_NB1||item.hs_code||item.hsCode),desc:String(item.product||item.description||'').trim(),min:mn,avg:av,max:mx,protected:!!item.protection,protPct:num(item.protection_percentage),risk:decision.risk||'',action:decision.action||'',reason:decision.reason||''}}
+async function loadData(){try{const [p,t]=await Promise.all([fetch(DATA_URL).then(r=>r.ok?r.json():[]),fetch(TARIFF_URL).then(r=>r.ok?r.json():{})]);products=Array.isArray(p)?p.map(mapProduct).filter(x=>x.hs||x.desc):[];tariff=t||{hs_rates:{},chapter_defaults:{}};$('dataStatus').textContent='تم تحميل البيانات';$('statProducts').textContent=fmt(products.length);$('statHs').textContent=fmt(new Set(products.map(p=>p.hs)).size);renderProducts();}catch(e){$('dataStatus').textContent='تعذر تحميل البيانات';console.error(e)}}
+function dutyFor(hs){hs=norm(hs);if(tariff.hs_rates&&tariff.hs_rates[hs]!=null)return tariff.hs_rates[hs];if(hs.length>=6&&tariff.hs_rates&&tariff.hs_rates[hs.slice(0,6)]!=null)return tariff.hs_rates[hs.slice(0,6)];const ch=hs.slice(0,2);if(tariff.chapter_defaults&&tariff.chapter_defaults[ch]!=null)return tariff.chapter_defaults[ch];return 20}
+function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===page));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('sidebar').classList.remove('open')}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));$('hamb').onclick=()=>$('sidebar').classList.toggle('open');
+function renderProducts(){const q=($('searchInput')?.value||'').trim().toLowerCase();const limit=num($('limitInput')?.value)||50;let rows=products;if(q)rows=rows.filter(p=>p.hs.includes(norm(q))||p.desc.toLowerCase().includes(q));rows=rows.slice(0,limit);$('searchMeta').textContent=`عرض ${rows.length} من ${products.length} منتج`;$('productsBody').innerHTML=rows.map(p=>`<tr><td><button class="badge" onclick='useProduct(${JSON.stringify(p).replace(/'/g,"&#39;")})'>${p.hs||'-'}</button></td><td>${p.desc||'-'}</td><td>${p.protected?`<span class="badge danger">محمي ${p.protPct||''}%</span>`:'<span class="badge ok">غير محمي</span>'}</td><td>${dutyFor(p.hs)}%</td><td>${fmt(p.min)}</td><td>${fmt(p.avg)}</td><td>${fmt(p.max)}</td><td><button class="btn secondary" onclick='useProduct(${JSON.stringify(p).replace(/'/g,"&#39;")})'>للحاسبة</button></td></tr>`).join('')||'<tr><td colspan="8">لا توجد نتائج</td></tr>'}
+function useProduct(p){go('calculator');$('calcHs').value=p.hs;$('calcDesc').value=p.desc;$('refIqd').value=Math.round(p.avg||0);$('dutyRate').value=dutyFor(p.hs);$('protectionRate').value=p.protPct||0;calculateDuty()}
+function calculateDuty(){const q=num($('qty').value)||1,usd=num($('invoiceUsd').value),rate=num($('rate').value)||1320,ref=num($('refIqd').value),dr=num($('dutyRate').value),pr=num($('protectionRate').value),extra=num($('extraIqd').value);const invoice=usd*rate,unitInvoice=invoice/q,valuation=Math.max(unitInvoice,ref)*q,duty=valuation*((dr+pr)/100)+extra;$('invoiceIqdOut').textContent=fmt(invoice)+' د.ع';$('customsValueOut').textContent=fmt(valuation)+' د.ع';$('totalDutyOut').textContent=fmt(duty)+' د.ع'}
+function sendManifestToCalc(){go('calculator');$('calcHs').value=$('manHs').value;$('calcDesc').value=$('manDesc').value;$('qty').value=$('manQty').value;$('invoiceUsd').value=$('manValue').value;$('dutyRate').value=dutyFor($('manHs').value);calculateDuty()}
+function lookupTariff(){const hs=$('tariffHs').value;$('tariffOut').textContent=hs?dutyFor(hs)+'%':'-'}
+calculateDuty();loadData();
+</script>
 </body>
 </html>
