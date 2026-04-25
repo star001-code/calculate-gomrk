@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050505" />
+  <title>حاسبة فرق الرسم الكمركي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="overlay" class="overlay" hidden></div>
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="القائمة">☰</button>
+    <div class="top-title">حاسبة فرق الرسم الكمركي</div>
+  </header>
+
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div class="brand-logos"><span class="crest">🛡️</span><span class="crest">🇮🇶</span></div>
+      <div><strong>الحاسبة الكمركية</strong><small>فرق الرسم - العراق</small></div>
+    </div>
+    <div class="drawer-label">القائمة</div>
+    <nav class="drawer-nav">
+      <button data-page="home" class="active">🏠 الرئيسية</button>
+      <button data-page="products">🔍 المنتجات</button>
+      <button data-page="calculator">🧮 الحاسبة</button>
+      <button data-page="manifest">📄 قراءة المنفست</button>
+      <button data-page="tariff">📊 التعرفة الجمركية</button>
+      <button data-page="about">ℹ️ حول النظام</button>
+    </nav>
+    <div class="drawer-label">الإعدادات</div>
+    <nav class="drawer-nav settings-nav">
+      <button data-page="settings">🔑 مفتاح OpenAI</button>
+      <button id="themeToggle">☀️ الوضع الفاتح</button>
+    </nav>
+  </aside>
+
+  <main class="app-shell">
+    <section id="home" class="page active">
+      <div class="hero-card home-hero">
+        <div class="hero-text">
+          <p class="eyebrow">النظام الإلكتروني ✨</p>
+          <h1>حاسبة <span>فرق</span> الرسم<br>الكمركي</h1>
+          <p>نظام حساب الرسوم الكمركية<br>للمنافذ الحدودية العراقية</p>
+        </div>
+        <div class="hero-logos"><span>🛡️</span><span>🇮🇶</span></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div><small>رموز HS</small><strong id="hsCount">0</strong></div><span>#</span></div>
+        <div class="stat-card"><div><small>المنتجات</small><strong id="productCount">0</strong></div><span>📦</span></div>
+        <div class="stat-card single"><div><small>المنافذ</small><strong>4</strong></div><span>📍</span></div>
+      </div>
+      <div class="quick-cards">
+        <button class="big-card" data-go="calculator"><span>🧮</span><strong>حاسبة الرسوم</strong><small>احسب الرسوم الكمركية وفرق الرسم لمنتجاتك بدقة</small><em>ابدأ الحساب ←</em></button>
+        <button class="big-card" data-go="products"><span>🔍</span><strong>تصفح المنتجات</strong><small>ابحث في قاعدة البيانات برمز HS أو وصف المنتج</small><em>تصفح الآن ←</em></button>
+      </div>
+    </section>
+
+    <section id="products" class="page">
+      <div class="hero-card compact"><span class="page-emoji">🔍</span><h2>بحث <b>المنتجات</b></h2><p>إبحث برمز HS أو وصف المنتج (يدعم العربية)</p></div>
+      <div class="panel search-panel"><input id="productSearch" placeholder="أدخل رمز HS (مثال: 8471) أو وصف المنتج..." /><p><span id="readyProducts">0</span> منتج جاهز للبحث</p></div>
+      <div id="productsResults" class="results-list"></div>
+    </section>
+
+    <section id="calculator" class="page">
+      <div class="hero-card compact"><span class="page-emoji">🧮</span><h2>حاسبة فرق الرسم<br>الكمركي</h2><p>أدخل بيانات المنتجات لحساب الرسوم الكمركية</p></div>
+      <div class="panel"><label>↔ سعر الصرف (1 USD = ? IQD)</label><input id="fxRate" type="number" value="1320" /></div>
+      <div class="section-row"><button id="addProductBtn" class="primary">＋ إضافة منتج</button><h3>المنتجات 📦</h3></div>
+      <div id="calcItems" class="calc-items"><div class="empty">لم تتم إضافة منتجات بعد. اضغط "إضافة منتج" للبدء.</div></div>
+      <div class="actions"><button id="calculateBtn" class="primary">احسب الرسوم</button><button id="clearCalcBtn" class="ghost">↻ مسح الكل</button></div>
+      <div id="calcResult" class="panel result-panel" hidden></div>
+    </section>
+
+    <section id="manifest" class="page">
+      <div class="hero-card compact"><span class="page-emoji">📄</span><h2>قراءة المنفست بالذكاء<br>الاصطناعي</h2><p>حمّل صور البيان الكمركي واستخرج البيانات تلقائياً (يعمل مباشرة من المتصفح)</p></div>
+      <div id="keyWarning" class="warning"><strong>⚠️ مفتاح OpenAI مطلوب</strong><p>لاستخدام هذه الميزة، أضف مفتاح OpenAI الخاص بك من إعدادات النظام.</p><button class="primary" data-go="settings">إضافة المفتاح ←</button></div>
+      <div class="panel upload-box"><div>📤</div><p>اسحب صور البيان هنا أو اضغط للاختيار</p><small>يدعم حتى 5 صور (JPG, PNG)</small><input id="manifestFiles" type="file" accept="image/*" multiple /></div>
+      <div class="actions"><button id="extractManifest" class="primary">🤖 استخرج البيانات</button><button id="clearImages" class="ghost">مسح الصور</button></div>
+      <div id="manifestOutput" class="results-list"></div>
+    </section>
+
+    <section id="tariff" class="page">
+      <div class="hero-card compact"><span class="page-emoji">📊</span><h2>التعرفة <b>الجمركية</b></h2><p>قاعدة تعرفة كاملة وفق قانون التعرفة الجمركية</p></div>
+      <div class="panel search-panel"><input id="tariffSearch" placeholder="بحث برقم HS أو وصف البضاعة..." /><p><span id="tariffCount">0</span> سجل تعرفة</p></div>
+      <div id="tariffResults" class="results-list"></div>
+    </section>
+
+    <section id="about" class="page">
+      <div class="hero-card compact about-hero"><div class="hero-logos"><span>🛡️</span><span>🇮🇶</span></div><h2><span>حول</span> النظام</h2><p>حاسبة فرق الرسم الكمركي -<br>النسخة الثابتة</p></div>
+      <div class="panel about-panel"><h3>🎯 الغرض من النظام</h3><p>يساعد هذا النظام مفتشي وموظفي الكمارك العراقية وأصحاب الشركات المستوردة على حساب فرق الرسم الكمركي بدقة، والبحث عن رموز HS في قاعدة بيانات شاملة.</p></div>
+      <div class="panel about-panel"><h3>⚙️ الميزات</h3><p>✅ <b>حاسبة الرسوم</b> — احسب الرسم الكمركي وفرقه عن المدفوع بحسب التصنيف<br>✅ <b>بحث HS متقدم</b> — أكثر من 12,601 منتج مع قيم استدلالية<br>✅ <b>قراءة المنفست بالذكاء الاصطناعي</b> — يدعم العربية واليدوي والمطبوع<br>✅ <b>قاعدة تعرفة كاملة</b> — وفقاً لقانون التعرفة الكمركية رقم 22 لسنة 2010<br>✅ <b>حماية المنتج الوطني</b> — يحدد البضائع المحمية تلقائياً<br>✅ <b>يعمل بدون إنترنت</b> — بعد التحميل الأول</p></div>
+    </section>
+
+    <section id="settings" class="page">
+      <div class="hero-card compact"><span class="page-emoji">🔑</span><h2>مفتاح OpenAI</h2><p>يُستخدم فقط داخل المتصفح لقراءة المنفست</p></div>
+      <div class="panel"><label>OpenAI API Key</label><input id="openaiKey" type="password" placeholder="sk-..." /><button id="saveKey" class="primary full">حفظ المفتاح</button><p class="muted">المفتاح يُحفظ محلياً في جهازك ولا يُرفع إلى أي خادم.</p></div>
+    </section>
+  </main>
+
+  <div id="productModal" class="modal" hidden>
+    <div class="modal-card"><button class="modal-close">×</button><h3>إضافة منتج</h3><input id="modalSearch" placeholder="ابحث برمز HS أو وصف المنتج..." /><div id="modalResults" class="results-list mini"></div></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
