@@ -189,6 +189,75 @@ async function validateHs(init?: RequestInit) {
   return { results };
 }
 
+function tariffRow(p: StaticProduct): string[] {
+  return [
+    p.hs_code || "",
+    p.description || "",
+    p.unit || "",
+    p.duty_rate != null ? `${Math.round(p.duty_rate * 100)}%` : "",
+    p.avg_value != null ? String(p.avg_value) : "",
+  ];
+}
+
+async function tariffTable(init?: RequestInit) {
+  const body = await bodyJson(init);
+  const products = await loadProducts();
+  let rows = products.map(tariffRow);
+
+  const hsSearch = String(body.hsSearchTerm || "").trim();
+  const descSearch = String(body.descriptionSearchTerm || "").trim().toLowerCase();
+  if (hsSearch) rows = rows.filter((r) => r[0].includes(normHs(hsSearch)));
+  if (descSearch) rows = rows.filter((r) => r[1].toLowerCase().includes(descSearch));
+
+  const filters = body.columnFilters || {};
+  for (const [col, vals] of Object.entries(filters)) {
+    const idx = Number(col);
+    if (Array.isArray(vals) && vals.length > 0) {
+      const set = new Set(vals.map(String));
+      rows = rows.filter((r) => set.has(r[idx] || ""));
+    }
+  }
+
+  const sortColumn = body.sortColumn != null ? Number(body.sortColumn) : null;
+  const sortDirection = body.sortDirection === "desc" ? "desc" : "asc";
+  if (sortColumn !== null && Number.isFinite(sortColumn)) {
+    rows = rows.slice().sort((a, b) => {
+      const av = a[sortColumn] || "";
+      const bv = b[sortColumn] || "";
+      const an = Number(String(av).replace(/[^0-9.-]/g, ""));
+      const bn = Number(String(bv).replace(/[^0-9.-]/g, ""));
+      const cmp = Number.isFinite(an) && Number.isFinite(bn) && av !== "" && bv !== "" ? an - bn : String(av).localeCompare(String(bv), "ar");
+      return sortDirection === "desc" ? -cmp : cmp;
+    });
+  }
+
+  const page = Math.max(1, Number(body.page || 1));
+  const pageSize = Math.max(1, Number(body.pageSize || 10));
+  const totalRecords = products.length;
+  const filteredRecords = rows.length;
+  const totalPages = Math.max(1, Math.ceil(filteredRecords / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * pageSize;
+
+  return {
+    success: true,
+    data: rows.slice(start, start + pageSize),
+    page: safePage,
+    pageSize,
+    filteredRecords,
+    totalRecords,
+    totalPages,
+  };
+}
+
+async function tariffColumnValues(url: string) {
+  const parsed = new URL(url, window.location.origin);
+  const col = Number(parsed.pathname.replace("/api/tariff/column-values/", ""));
+  const products = await loadProducts();
+  const values = Array.from(new Set(products.map((p) => tariffRow(p)[col] || ""))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
+  return { success: true, values: values.slice(0, 1000) };
+}
+
 async function staticApi(url: string, init?: RequestInit): Promise<any> {
   const parsed = new URL(url, window.location.origin);
   const path = parsed.pathname;
@@ -232,8 +301,9 @@ async function staticApi(url: string, init?: RequestInit): Promise<any> {
     };
   }
 
+  if (path === "/api/tariff/table") return tariffTable(init);
+  if (path.startsWith("/api/tariff/column-values/")) return tariffColumnValues(url);
   if (path === "/api/calculate") return calcDuty(await bodyJson(init));
-
   if (path === "/api/manifest/validate-hs") return validateHs(init);
 
   if (path === "/api/manifest/extract" || path === "/api/manifest/extract-multi") {
